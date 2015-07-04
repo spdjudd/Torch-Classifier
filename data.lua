@@ -7,8 +7,8 @@ trainProportion = 0.7
 
 
 -- TODO: move this to main config and default to a sensible relative folder
---sourcePath = '/home/simon/Public/Share/resized/'
-sourcePath = '/home/simon/Public/Share/test/'
+sourcePath = '/home/simon/Public/Share/resized/'
+--sourcePath = '/home/simon/Public/Share/test/'
 --testSourcePath = '/home/simon/Public/Share/test/'
 
 -------------------------------------------------------
@@ -37,10 +37,12 @@ local trainIndex = 0
 local testIndex = 0
 local trainTable = {}
 local testTable = {}
+classes = {}
 for class,files in pairs(classFiles) do
     print('Processing class '..class)
     classCount = classCount + 1
     classMap[class] = classCount
+    classes[classCount] = class
     -- randperm the order, take the first trainProportion into train, rest into test
     -- TODO: Make sure any derived images are all in the same set (don't train on A and test on A')
     indices = torch.randperm(classSizes[class])

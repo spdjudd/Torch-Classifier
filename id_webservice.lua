@@ -3,7 +3,7 @@
 --
 ----------------------------------------------------------------------------------
 
-require('mobdebug').start()
+--require('mobdebug').start()
 local turbo = require("turbo")
 local torch = require("torch")
 local image = require("image")
