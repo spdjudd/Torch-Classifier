@@ -3,63 +3,57 @@ require 'image'   -- for color transforms
 require 'nn'      -- provides a normalization operator
 
 imagesize = 50
-trainProportion = 0.7
-
 
 -- TODO: move this to main config and default to a sensible relative folder
-sourcePath = '/home/simon/Public/Share/resized/'
---sourcePath = '/home/simon/Public/Share/test/'
---testSourcePath = '/home/simon/Public/Share/test/'
+testSourcePath = '/home/simon/Public/Share/data/test'
+trainSourcePath = '/home/simon/Public/Share/data/train'
 
 -------------------------------------------------------
 -- Load the data from disk
+-- 
+-- Outputs:
+--  classes - table of classes the network will discriminate
+--  classMap - mapping from label to class
+--  trainData, trsize - tensor of training image data, plus number of images
+--  testData, tesize - tensor of test image data, plus number of images
 
--- keep a table of classes and class sizes
+classes = {}
 classMap = {}
-classFiles = {}
-classSizes = {}
+local trainTable = {}
+local trainIndex = 0
+local classCount = 0
+
+print('Building training data file list and classes...')
 local popen = io.popen
-for filename in popen('ls -a "'..sourcePath..'" | grep png'):lines() do
+for filename in popen('ls -a "'..trainSourcePath..'" | grep png'):lines() do
     -- files named <class>-xxxx.png
     class = string.sub(filename, 1, string.find(filename, '-') - 1)
     print(filename..' class: '..class)
-    if classFiles[class] == nil then
-        classFiles[class] = {}
-        classSizes[class] = 0
+    if classMap[class] == nil then
+        classCount = classCount + 1
+        classMap[class] = classCount
+        classes[classCount] = class
         print('created class')
     end
-    classSizes[class] = classSizes[class] + 1
-    classFiles[class][classSizes[class]] = filename
+    trainIndex = trainIndex + 1
+    trainTable[trainIndex] = filename
 end
 
-local classCount = 0
-local trainIndex = 0
-local testIndex = 0
-local trainTable = {}
 local testTable = {}
-classes = {}
-for class,files in pairs(classFiles) do
-    print('Processing class '..class)
-    classCount = classCount + 1
-    classMap[class] = classCount
-    classes[classCount] = class
-    -- randperm the order, take the first trainProportion into train, rest into test
-    -- TODO: Make sure any derived images are all in the same set (don't train on A and test on A')
-    indices = torch.randperm(classSizes[class])
-    trSize = trainProportion * classSizes[class]
-    for i = 1,classSizes[class] do
-        file = files[indices[i]]
-        if i <= trSize then
-            print('Train: '..file)
-            trainIndex = trainIndex + 1
-            trainTable[trainIndex] = file
-        else
-            print('Test: '..file)
-            testIndex = testIndex + 1
-            testTable[testIndex] = file
-        end
+local testIndex = 0
+print('Building testing data file list...')
+for filename in popen('ls -a "'..testSourcePath..'" | grep png'):lines() do
+    -- files named <class>-xxxx.png
+    class = string.sub(filename, 1, string.find(filename, '-') - 1)
+    print(filename..' class: '..class)
+    if classMap[class] == nil then
+        -- throw an error - shouldn't have test classes that weren't in training data
+        error('Test class <'..class..'> was not present in training data')
     end
+    testIndex = testIndex + 1
+    testTable[testIndex] = filename
 end
+
 
 trsize = trainIndex
 tesize = testIndex
@@ -75,27 +69,28 @@ testData = {
    size = function() return testIndex end
 }
 
--- Loop over the images and load them
+-- Loop over the images, in random order, and load them
+indices = torch.randperm(trainIndex)
 print('Loading training files')
 for i = 1,trainIndex do
-    filename = trainTable[i]
-    filepath = sourcePath..filename
+    filename = trainTable[indices[i]]
+    filepath = trainSourcePath..filename
     class = string.sub(filename, 1, string.find(filename, '-') - 1)
     print('Path: '..filepath..' Class: '..class..' ClassIndex: '..classMap[class])
     trainData.labels[i] = classMap[class]
     trainData.data[i] = image.load(filepath,3)
 end
 
+indices = torch.randperm(testIndex)
 print('Loading testing files')
 for i = 1,testIndex do
-    filename = testTable[i]
-    filepath = sourcePath..filename
+    filename = testTable[indices[i]]
+    filepath = testSourcePath..filename
     class = string.sub(filename, 1, string.find(filename, '-') - 1)
     print('Path: '..filepath..' Class: '..class..' ClassIndex: '..classMap[class])
     testData.labels[i] = classMap[class]
     testData.data[i] = image.load(filepath,3)
 end
-
 
 ----------------------------------------------------------------------
 print '==> preprocessing data'
