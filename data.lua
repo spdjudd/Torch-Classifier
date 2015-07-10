@@ -5,8 +5,8 @@ require 'nn'      -- provides a normalization operator
 imagesize = 50
 
 -- TODO: move this to main config and default to a sensible relative folder
-testSourcePath = '/home/simon/Public/Share/data/test'
-trainSourcePath = '/home/simon/Public/Share/data/train'
+testSourcePath = '/home/simon/Public/Share/data/test/'
+trainSourcePath = '/home/simon/Public/Share/data/train/'
 
 -------------------------------------------------------
 -- Load the data from disk
