@@ -28,12 +28,11 @@ local popen = io.popen
 for filename in popen('ls -a "'..trainSourcePath..'" | grep png'):lines() do
     -- files named <class>-xxxx.png
     class = string.sub(filename, 1, string.find(filename, '-') - 1)
-    print(filename..' class: '..class)
     if classMap[class] == nil then
         classCount = classCount + 1
         classMap[class] = classCount
         classes[classCount] = class
-        print('created class')
+        print('Created class '..class)
     end
     trainIndex = trainIndex + 1
     trainTable[trainIndex] = filename
@@ -45,7 +44,6 @@ print('Building testing data file list...')
 for filename in popen('ls -a "'..testSourcePath..'" | grep png'):lines() do
     -- files named <class>-xxxx.png
     class = string.sub(filename, 1, string.find(filename, '-') - 1)
-    print(filename..' class: '..class)
     if classMap[class] == nil then
         -- throw an error - shouldn't have test classes that weren't in training data
         error('Test class <'..class..'> was not present in training data')
@@ -76,7 +74,6 @@ for i = 1,trainIndex do
     filename = trainTable[indices[i]]
     filepath = trainSourcePath..filename
     class = string.sub(filename, 1, string.find(filename, '-') - 1)
-    print('Path: '..filepath..' Class: '..class..' ClassIndex: '..classMap[class])
     trainData.labels[i] = classMap[class]
     trainData.data[i] = image.load(filepath,3)
 end
@@ -87,7 +84,6 @@ for i = 1,testIndex do
     filename = testTable[indices[i]]
     filepath = testSourcePath..filename
     class = string.sub(filename, 1, string.find(filename, '-') - 1)
-    print('Path: '..filepath..' Class: '..class..' ClassIndex: '..classMap[class])
     testData.labels[i] = classMap[class]
     testData.data[i] = image.load(filepath,3)
 end
